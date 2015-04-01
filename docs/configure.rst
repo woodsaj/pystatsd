@@ -26,14 +26,19 @@ They, and their defaults, are::
 
     statsd = StatsClient(host='localhost',
                          port=8125,
+                         ipv6=False,
                          prefix=None,
                          maxudpsize=512)
 
-``host`` is the host running the statsd server. It will support any kind
-of name or IP address you might use.
+``host`` is the host running the statsd server. If a hostname is given,
+will lookup an IP v4 or v6 address based on the value of ``ipv6``. If an
+address is given, the family should match ``ipv6``.
 
 ``port`` is the statsd server port. The default for both server and
 client is ``8125``.
+
+``ipv6`` enables the use of IPv6. Since the Etsy server defaults to v4
+only, the default is ``False``.
 
 ``prefix`` helps distinguish multiple applications or environments using
 the same statsd server. It will be prepended to all stats,
@@ -59,6 +64,10 @@ doing. Larger values then the default of 512 are generally deemed unsafe for use
 on the internet. On a controlled local network or when the statsd server is
 running on 127.0.0.1 larger values can decrease the number of UDP packets when
 pipelining many metrics. Use with care!
+
+.. versionchanged:: 3.2
+
+``ipv6`` and 
 
 
 In Django
@@ -108,4 +117,5 @@ and then in your Python application, you can simply do::
     environment.
 
 .. _statsd: https://github.com/etsy/statsd
+.. _StatsD: https://github.com/etsy/statsd
 .. _Django: https://www.djangoproject.com/

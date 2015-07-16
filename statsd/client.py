@@ -5,7 +5,7 @@ import random
 import socket
 import time
 import abc
-
+from eventlet.pools import Pool
 
 __all__ = ['StatsClient', 'TCPStatsClient']
 
@@ -135,17 +135,17 @@ class StatsClient(StatsClientBase):
                  maxudpsize=512):
         """Create a new client."""
         fam = socket.AF_INET6 if ipv6 else socket.AF_INET
-        family, _, _, _, addr = socket.getaddrinfo(
-            host, port, fam, socket.SOCK_DGRAM)[0]
+        family, _, _, _, addr = socket.getaddrinfo(host, port, fam, socket.SOCK_DGRAM)[0]
         self._addr = addr
-        self._sock = socket.socket(family, socket.SOCK_DGRAM)
+        self._pool = Pool(max_size=100, min_size=0, create=lambda: socket.socket(family, socket.SOCK_DGRAM))
         self._prefix = prefix
         self._maxudpsize = maxudpsize
 
     def _send(self, data):
         """Send data to statsd."""
         try:
-            self._sock.sendto(data.encode('ascii'), self._addr)
+            with self._pool.item() as _sock:
+                _sock.sendto(data.encode('ascii'), self._addr)
         except socket.error:
             # No time for love, Dr. Jones!
             pass

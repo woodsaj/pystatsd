@@ -26,6 +26,26 @@ make_val = {
     'tcp': lambda x, addr: mock.call(str.encode(x + '\n')),
 }
 
+class pool_item(object):
+    def __init__(self, item):
+        self.item = item
+
+    def __enter__(self):
+        return self.item
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+class fake_socket_pool(object):
+    def __init__(self, **kwargs):
+        self._sock = mock.Mock()
+        pass
+
+    def item(self):
+        return pool_item(self._sock)
+
+    def get(self):
+        return self._sock
 
 def _udp_client(prefix=None, addr=None, port=None, ipv6=False):
     if not addr:
@@ -33,7 +53,8 @@ def _udp_client(prefix=None, addr=None, port=None, ipv6=False):
     if not port:
         port = ADDR[1]
     sc = StatsClient(host=addr, port=port, prefix=prefix, ipv6=ipv6)
-    sc._sock = mock.Mock()
+    sc._pool = fake_socket_pool()
+    sc._sock = sc._pool.get()
     return sc
 
 
